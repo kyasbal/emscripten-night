@@ -1,0 +1,7 @@
+[package]
+name = "emscripten-night"
+version = "0.1.0"
+authors = ["Kakeru Ishii <i.kakeru@grimoire.gl>"]
+edition = "2018"
+
+[dependencies]
