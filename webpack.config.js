@@ -6,6 +6,7 @@ const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 module.exports = {
   entry: "./src/index.ts",
+  devtool: "source-map",
   output: {
     path: dist,
     filename: "bundle.js"
@@ -14,7 +15,7 @@ module.exports = {
     contentBase: dist
   },
   resolve: {
-    extensions: [".ts", ".tsx"]
+    extensions: [".ts", ".tsx", ".wasm"]
   },
   module: {
     rules: [

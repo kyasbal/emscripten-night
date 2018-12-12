@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack --watch"
+    "start": "webpack-dev-server --no-inline"
   },
   "author": "",
   "license": "ISC",
@@ -12,6 +12,7 @@
     "@babel/core": "^7.2.0",
     "@babel/plugin-proposal-class-properties": "^7.2.1",
     "@babel/plugin-proposal-decorators": "^7.2.0",
+    "@babel/plugin-syntax-dynamic-import": "^7.2.0",
     "@babel/preset-env": "^7.2.0",
     "@babel/preset-typescript": "^7.1.0",
     "@wasm-tool/wasm-pack-plugin": "^0.1.6",
@@ -21,5 +22,8 @@
     "typescript": "^3.2.2",
     "webpack": "^4.27.1",
     "webpack-cli": "^3.1.2"
+  },
+  "dependencies": {
+    "webpack-dev-server": "^3.1.10"
   }
 }
