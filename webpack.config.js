@@ -5,6 +5,10 @@ const dist = path.resolve(__dirname, "dist");
 const WasmPackPlugin = require("@wasm-tool/wasm-pack-plugin");
 
 module.exports = {
+  optimization: {
+    minimize: false
+  },
+  mode: "production",
   entry: "./src/index.ts",
   devtool: "source-map",
   output: {
@@ -24,6 +28,14 @@ module.exports = {
         use: [
           {
             loader: "babel-loader"
+          }
+        ]
+      },
+      {
+        test: /\.(vert|frag)?$/,
+        use: [
+          {
+            loader: "raw-loader"
           }
         ]
       }

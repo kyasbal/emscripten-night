@@ -1,25 +1,12 @@
 import vertexShaderCode from "./shader/sobel.vert";
 import fragmentShaderCode from "./shader/sobel.frag";
-function waitForVideoLoad(source: HTMLVideoElement): Promise<void> {
-  return new Promise(resolve => {
-    source.addEventListener("loadedmetadata", () => {
-      resolve();
-    });
-  });
-}
-
-async function main() {
-  const video = document.getElementById("source") as HTMLVideoElement;
-  await waitForVideoLoad(video);
-  const texSize = video.videoWidth * video.videoHeight * 4;
-  const wasm = await import("../crate/pkg/emscripten_night_bg");
-  // wasmの中でメモリを確保してもらう
-  const sobelResultPtr = wasm.alloc(texSize);
-  const segmentResultPtr = wasm.alloc(texSize);
-  const memoryPtr = wasm.alloc(video.videoWidth * video.videoHeight);
+export function* webglRenderer(
+  source: HTMLVideoElement,
+  sobelTextureDest: Uint8Array
+) {
   const canvas = document.createElement("canvas");
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
+  canvas.width = source.videoWidth;
+  canvas.height = source.videoHeight;
   document.body.appendChild(canvas);
   const gl = canvas.getContext("webgl");
 
@@ -71,8 +58,8 @@ async function main() {
     gl.TEXTURE_2D,
     0,
     gl.RGBA,
-    video.videoWidth,
-    video.videoHeight,
+    source.videoWidth,
+    source.videoHeight,
     0,
     gl.RGBA,
     gl.UNSIGNED_BYTE,
@@ -102,22 +89,12 @@ async function main() {
 
   gl.disable(gl.DEPTH_TEST);
 
-  const canvas2d = document.createElement("canvas");
-  canvas2d.width = video.videoWidth;
-  canvas2d.height = video.videoHeight;
-  document.body.appendChild(canvas2d);
-  const ctx = canvas2d.getContext("2d");
-  const render = () => {
-    const sobelResultBuffer = new Uint8Array(
-      wasm.memory.buffer,
-      sobelResultPtr,
-      texSize
-    );
+  while (true) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
     gl.bindTexture(gl.TEXTURE_2D, texture);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, video);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, source);
     gl.useProgram(shaderProgram);
     gl.uniform1i(gl.getUniformLocation(shaderProgram, "source"), 0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
@@ -131,35 +108,12 @@ async function main() {
     gl.readPixels(
       0,
       0,
-      video.videoWidth,
-      video.videoHeight,
+      source.videoWidth,
+      source.videoHeight,
       gl.RGBA,
       gl.UNSIGNED_BYTE,
-      sobelResultBuffer
+      sobelTextureDest
     );
-    wasm.process(
-      sobelResultPtr,
-      segmentResultPtr,
-      memoryPtr,
-      video.videoWidth,
-      video.videoHeight
-    );
-
-    // 毎フレーム作らないとだめっぽい
-    const segmentationResultBuffer = new Uint8ClampedArray(
-      wasm.memory.buffer,
-      segmentResultPtr,
-      texSize
-    );
-    const imgData = new ImageData(
-      segmentationResultBuffer,
-      video.videoWidth,
-      video.videoHeight
-    );
-    ctx.putImageData(imgData, 0, 0);
-    requestAnimationFrame(render);
-  };
-  render();
+    yield;
+  }
 }
-
-main();
