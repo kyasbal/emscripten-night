@@ -8,8 +8,8 @@ const vec2 pixelSize = vec2(1./640.,1./360.);
 const float min = 0.01;
 
 void main(){
-    float A = 0.112737;
-    float B = 0.274526;
+    float A = 1./5.;
+    float B = 2./5.;
     vec3 lu = texture2D(source,uv-vec2(-1,1) * pixelSize).rgb;
     vec3 u = texture2D(source,uv-vec2(0,1) * pixelSize).rgb;
     vec3 ru = texture2D(source,uv-vec2(1,1) * pixelSize).rgb;

@@ -10,19 +10,26 @@ function waitForVideoLoad(source: HTMLVideoElement): Promise<void> {
 
 async function main() {
   const video = document.getElementById("source") as HTMLVideoElement;
+  // ビデオの読み込みを待つ
   await waitForVideoLoad(video);
   const texSize = video.videoWidth * video.videoHeight * 4;
   const wasm = await import("../crate/pkg/emscripten_night_bg");
+
   // wasmの中でメモリを確保してもらう
   const sobelResultPtr = wasm.alloc(texSize);
   const segmentResultPtr = wasm.alloc(texSize);
   const memoryPtr = wasm.alloc(video.videoWidth * video.videoHeight);
+
+  // Sobelの結果を書くためのキャンバスを作る
   const canvas = document.createElement("canvas");
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
   document.body.appendChild(canvas);
   const gl = canvas.getContext("webgl");
 
+  /**********
+  // WebGL関係の初期化の部分はじまり
+  ***********/
   // bufferの初期化
   const quadVertices = new Float32Array([-1, 1, 1, 1, 1, -1, -1, -1]);
   const quadIndices = new Uint8Array([0, 1, 3, 1, 2, 3]);
@@ -102,6 +109,10 @@ async function main() {
 
   gl.disable(gl.DEPTH_TEST);
 
+  /**********
+  // WebGL関係の初期化の部分終わり
+  ***********/
+
   const canvas2d = document.createElement("canvas");
   canvas2d.width = video.videoWidth;
   canvas2d.height = video.videoHeight;
@@ -113,6 +124,8 @@ async function main() {
       sobelResultPtr,
       texSize
     );
+
+    // デモようにキャンバスを使うようにしておく
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
@@ -137,6 +150,8 @@ async function main() {
       gl.UNSIGNED_BYTE,
       sobelResultBuffer
     );
+
+    // ここでwasmを使う
     wasm.process(
       sobelResultPtr,
       segmentResultPtr,
@@ -145,7 +160,7 @@ async function main() {
       video.videoHeight
     );
 
-    // 毎フレーム作らないとだめっぽい
+    // wasmで書き終わったデータからcanvas2D用のデータを作る
     const segmentationResultBuffer = new Uint8ClampedArray(
       wasm.memory.buffer,
       segmentResultPtr,
